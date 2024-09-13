@@ -11,7 +11,7 @@ from aioredis.client import Redis
 import subscribe_payment
 import support
 from helper import kb_markup_subscribe, make_request, keyboard_work, kb_menu, kb_wrong_token, kb_all_warehouses, \
-    kb_confirm_adding_warehouse
+    kb_confirm_adding_warehouse, kb_warehouse_setting_menu
 from states import AddToken, AddWarehouse
 
 redis_connection = Redis(host=os.environ.get('REDIS_URL'), port=6379, db=0, password=os.environ.get('REDIS_PASSWORD'))
@@ -59,16 +59,23 @@ async def send_welcome(message: types.Message, state):
 async def add_token_handler(callback: types.CallbackQuery, state: FSMContext):
     await state.clear()
     await callback.message.answer(
-        'Отправь мне свой токен из личного кабинета WB для поставок с флагом только на чтение'
+        'Отправь мне свой токен из личного кабинета WB для поставок с флагом только на чтение',
+        reply_markup=kb_wrong_token.as_markup(),
     )
     await state.set_state(AddToken.wait)
 
 
 @dp.callback_query(F.data == 'token_no')
 @dp.callback_query(F.data == 'main_menu')
+@dp.callback_query(F.data == 'cancel_adding')
 @keyboard_work
 async def finish_token_adding(callback: types.CallbackQuery, state: FSMContext):
     await state.clear()
+    if callback.data == 'token_no':
+        return await callback.message.answer(
+            'Отлично, давай настроим склады',
+            reply_markup=kb_warehouse_setting_menu.as_markup()
+        )
     await callback.message.answer(
         'Что хочешь сделать?',
         reply_markup=kb_menu.as_markup()
@@ -86,7 +93,7 @@ async def add_token(message: types.Message, state: FSMContext):
     )
     if answer['success']:
         await state.clear()
-        return await message.answer('Токен успешно добавлен!', reply_markup=kb_menu.as_markup())
+        return await message.answer('Токен успешно добавлен!', reply_markup=kb_warehouse_setting_menu.as_markup())
 
     await message.answer(
         'Ты ввел неверный токен, отправь заново, следуй инструкции для создания токена '
@@ -95,7 +102,8 @@ async def add_token(message: types.Message, state: FSMContext):
     )
 
 
-@dp.callback_query(F.data.split('_')[0] == 'warehouse')
+@dp.callback_query(F.data == 'warehouse_change')
+@dp.callback_query(F.data == 'warehouse_add')
 @keyboard_work
 async def setup_warehouses(callback: types.CallbackQuery, state: FSMContext):
     if callback.data == 'warehouse_change':
@@ -129,7 +137,7 @@ async def fill_warehouse_name(callback: types.CallbackQuery, state: FSMContext):
     warehouse_id, warehouse_name = callback.data.split('__')
     await state.set_data({'warehouse_name': warehouse_name, 'warehouse_id': warehouse_id})
     await state.set_state(AddWarehouse.coefficient)
-    return await callback.message.answer('Отправь коэфициент, ниже которого тебя необходимо уведомлять, например 5')
+    return await callback.message.answer('Отправь коэффициент, ниже которого тебя необходимо уведомлять, например 5')
 
 
 @dp.message(AddWarehouse.coefficient)
@@ -138,14 +146,14 @@ async def fill_coefficient(message: types.Message, state: FSMContext):
     coefficient = message.text
     data['coefficient'] = coefficient
     await state.set_data(data)
-    await state.set_state(AddWarehouse.start_date)
+    await state.set_state(AddWarehouse.interval)
     return await message.answer(
-        'Отлично, осталось совсем чуть-чуть, интервал дат, в которые ты хочешь, чтобы я следил за поставками. '
+        'Осталось совсем чуть-чуть, отправь интервал дат, в которые ты хочешь, чтобы я следил за поставками.\n\n '
         'Например 01.01.2024 - 15.01.2024'
     )
 
 
-@dp.message(AddWarehouse.start_date)
+@dp.message(AddWarehouse.interval)
 async def fill_start_and_finish_date_and_save(message: types.Message, state: FSMContext):
     data = await state.get_data()
     start_date, finish_date = message.text.split(' - ')
@@ -172,3 +180,71 @@ async def save_warehouse(callback: types.CallbackQuery, state: FSMContext):
     )
     print(answer)
     return await callback.message.answer('Отлично, склад добавлен в отслеживание', reply_markup=kb_menu.as_markup())
+
+
+@dp.callback_query(F.data == 'change_coefficient')
+@keyboard_work
+async def change_coefficient(callback: types.CallbackQuery, state: FSMContext):
+    await state.set_state(AddWarehouse.coefficient)
+    return await callback.message.answer('Отправь коэффициент, ниже которого тебя необходимо уведомлять, например 5')
+
+
+@dp.callback_query(F.data == 'change_dates')
+@keyboard_work
+async def change_interval(callback: types.CallbackQuery, state: FSMContext):
+    await state.set_state(AddWarehouse.interval)
+    return await callback.message.answer(
+        'Осталось совсем чуть-чуть, отправь интервал дат, в которые ты хочешь, чтобы я следил за поставками.\n\n '
+        'Например 01.01.2024 - 15.01.2024'
+    )
+
+
+@dp.callback_query(F.data.split("__")[0] == "warehouse_update")
+@keyboard_work
+async def select_update_fields(callback: types.CallbackQuery, state: FSMContext):
+    await state.clear()
+    warehouse_id = callback.data.split('__')[1]
+    warehouse_information = await make_request(
+        url=f"/supplies/warehouses/{warehouse_id}",
+        params={'chat_id': callback.message.chat.id},
+        method='get'
+    )
+    kb_to_update = InlineKeyboardBuilder()
+    kb_to_update.row(
+        InlineKeyboardButton(
+            text="Выключить отслеживание"
+            if warehouse_information['warehouse']['is_active'] else "Включить отслеживание",
+            callback_data=f'change_is_active__{warehouse_id}'
+        ),
+        InlineKeyboardButton(
+            text='Изменить коэффициент',
+            callback_data=f'change_coefficient__{warehouse_id}'
+        ),
+        InlineKeyboardButton(
+            text='Изменить интервал',
+            callback_data=f'change_interval__{warehouse_id}'
+        )
+    )
+    kb_to_update.row(
+        InlineKeyboardButton(
+            text='Сохранить и выйти',
+            callback_data='change_save'
+        ),
+        InlineKeyboardButton(
+            text='Отменить и выйти',
+            callback_data='change_cancel'
+        )
+    )
+    await state.set_data(warehouse_information)
+    return await callback.message.answer(
+        f"Выбери, что желаешь изменить.\n"
+        f"Сейчас у тебя: \n"
+        f"Склад {warehouse_information['warehouse_name']} коэффициент: {warehouse_information['coefficient']} "
+        f"с {warehouse_information['start_date']} до {warehouse_information['finish_date']}",
+        reply_markup=kb_to_update.as_markup()
+    )
+
+
+@dp.callback_query(F.data.split('_')[0] == 'change')
+@keyboard_work
+async def
