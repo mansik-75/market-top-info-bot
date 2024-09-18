@@ -17,7 +17,7 @@ async def send_support(message: types.Message, state):
     )
 
 
-@router.callback_query(F.data in ['support_manager'])
+@router.callback_query(F.data.in_(['support_manager']))
 @keyboard_work
 async def send_message_to_admin(call: types.CallbackQuery):
     text = f'От клиента @{call.message.chat.username}:\n\nПроблемы '

@@ -51,6 +51,7 @@ kb_warehouse_setting_menu.row(
 )
 
 all_warehouses = get(os.environ.get('API_URL') + '/supplies/warehouses', params={'chat_id': os.environ.get('ADMIN_CHAT')}).json()
+
 kb_all_warehouses = InlineKeyboardBuilder()
 for warehouse in all_warehouses['data']:
     kb_all_warehouses.row(
@@ -65,10 +66,10 @@ kb_confirm_adding_warehouse.row(
     InlineKeyboardButton(text='Да, все верно', callback_data='save')
 )
 kb_confirm_adding_warehouse.row(
-    InlineKeyboardButton(text='Коэффициент неверный', callback_data='change_coefficient')
+    InlineKeyboardButton(text='Коэффициент неверный', callback_data='change_coefficient_adding')
 )
 kb_confirm_adding_warehouse.row(
-    InlineKeyboardButton(text='Интервал дат неверный', callback_data='change_dates')
+    InlineKeyboardButton(text='Интервал дат неверный', callback_data='change_dates_adding')
 )
 kb_confirm_adding_warehouse.row(
     InlineKeyboardButton(text='Отменить добавление склада', callback_data='cancel_adding')
@@ -128,3 +129,33 @@ async def make_request(url, params: dict, json_data=None, files=None, method='po
     print(answer)
     await session.close()
     return answer
+
+
+def create_update_keyboard(warehouse_id, warehouse_info) -> InlineKeyboardBuilder:
+    kb_to_update = InlineKeyboardBuilder()
+    kb_to_update.row(
+        InlineKeyboardButton(
+            text="Выключить отслеживание"
+            if warehouse_info['is_active'] else "Включить отслеживание",
+            callback_data=f'change_is_active__{warehouse_id}'
+        ),
+        InlineKeyboardButton(
+            text='Изменить коэффициент',
+            callback_data=f'change_coefficient__{warehouse_id}'
+        ),
+        InlineKeyboardButton(
+            text='Изменить интервал',
+            callback_data=f'change_interval__{warehouse_id}'
+        )
+    )
+    kb_to_update.row(
+        InlineKeyboardButton(
+            text='Сохранить и выйти',
+            callback_data='change_save'
+        ),
+        InlineKeyboardButton(
+            text='Отменить и выйти',
+            callback_data='change_cancel'
+        )
+    )
+    return kb_to_update

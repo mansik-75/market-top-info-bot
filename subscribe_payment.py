@@ -45,7 +45,7 @@ async def send_keyboard_with_tariffs(callback: types.CallbackQuery):
     )
 
 
-@router.callback_query(F.data in PRICE_IDS)
+@router.callback_query(F.data.in_(PRICE_IDS))
 @keyboard_work
 async def subscribe_payment(callback: types.CallbackQuery):
     """Метод, который отправляет счет пользователю"""
