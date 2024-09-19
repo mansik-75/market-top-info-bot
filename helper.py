@@ -55,7 +55,7 @@ all_warehouses = get(os.environ.get('API_URL') + '/supplies/warehouses', params=
 all_warehouses_buttons = []
 all_warehouses_names = {}
 for warehouse in all_warehouses['data']:
-    all_warehouses_names[warehouse['warehouse_id']] = warehouse['warehouse_name']
+    all_warehouses_names[str(warehouse['warehouse_id'])] = warehouse['warehouse_name']
     all_warehouses_buttons.append(InlineKeyboardButton(
         text=warehouse['warehouse_name'],
         callback_data=str(warehouse['warehouse_id'])
