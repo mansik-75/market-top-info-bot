@@ -141,12 +141,12 @@ async def setup_warehouses(callback: types.CallbackQuery, state: FSMContext):
 async def all_warehouses_manager(callback: types.CallbackQuery, state: FSMContext):
     d = await state.get_data()
     text = 'Выберите из списка склад'
-    if callback.data == 'warehouse_list_prev':
+    if callback.data == 'warehouse_list__previous':
         d['sheet'] -= 1
         if d['sheet'] < 0:
             text += '\nЭто первая страница'
             d['sheet'] = 0
-    elif callback.data == 'warehouse_list_next':
+    elif callback.data == 'warehouse_list__next':
         d['sheet'] += 1
         if d['sheet'] > len(all_warehouses_buttons) // 9:
             text += '\nЭто последняя страница'
