@@ -164,6 +164,8 @@ def create_update_keyboard(warehouse_id, warehouse_info) -> InlineKeyboardBuilde
 def fill_kb_all_warehouses(sheet: int) -> InlineKeyboardBuilder:
     kb_all_warehouses = InlineKeyboardBuilder()
     for i in range(sheet * 9, (sheet + 1) * 9):
+        if i >= len(all_warehouses_buttons):
+            break
         kb_all_warehouses.row(all_warehouses_buttons[i])
     kb_all_warehouses.adjust(3)
     kb_all_warehouses.row(
