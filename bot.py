@@ -14,7 +14,7 @@ import subscribe_payment
 import support
 from helper import kb_markup_subscribe, make_request, keyboard_work, kb_menu, kb_wrong_token, \
     kb_confirm_adding_warehouse, kb_warehouse_setting_menu, create_update_keyboard, all_warehouses_buttons, \
-    fill_kb_all_warehouses
+    fill_kb_all_warehouses, all_warehouses_names
 from states import AddToken, AddWarehouse, ChangeWarehouse
 
 # redis_connection = Redis(host=os.environ.get('REDIS_URL'), port=6379, db=0, password=os.environ.get('REDIS_PASSWORD'))
@@ -162,7 +162,8 @@ async def all_warehouses_manager(callback: types.CallbackQuery, state: FSMContex
 @dp.callback_query(AddWarehouse.name)
 @keyboard_work
 async def fill_warehouse_name(callback: types.CallbackQuery, state: FSMContext):
-    warehouse_id, warehouse_name = callback.data.split('__')
+    warehouse_id = callback.data
+    warehouse_name = all_warehouses_names[warehouse_id]
     await state.set_data({'warehouse_name': warehouse_name, 'warehouse_id': warehouse_id})
     await state.set_state(AddWarehouse.coefficient)
     return await callback.message.answer('Отправь коэффициент, ниже которого тебя необходимо уведомлять, например 5')
