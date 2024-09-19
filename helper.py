@@ -163,5 +163,5 @@ def fill_kb_all_warehouses(sheet: int) -> InlineKeyboardBuilder:
     kb_all_warehouses = InlineKeyboardBuilder([all_warehouses_buttons[sheet * 9:sheet * 9 + 8]])
     kb_all_warehouses.button(text='< сюда', callback_data='warehouse_list__previous')
     kb_all_warehouses.button(text='> туда', callback_data='warehouse_list__next')
-    kb_all_warehouses.adjust(3, 2)
+    kb_all_warehouses.adjust(3, 3, 3, 2)
     return kb_all_warehouses
