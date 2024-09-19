@@ -58,7 +58,7 @@ for warehouse in all_warehouses['data']:
     all_warehouses_names[warehouse['warehouse_id']] = warehouse['warehouse_name']
     all_warehouses_buttons.append(InlineKeyboardButton(
         text=warehouse['warehouse_name'],
-        callback_data=warehouse['warehouse_id']
+        callback_data=str(warehouse['warehouse_id'])
     ))
 
 kb_confirm_adding_warehouse = InlineKeyboardBuilder()
