@@ -150,7 +150,7 @@ async def all_warehouses_manager(callback: types.CallbackQuery, state: FSMContex
         d['sheet'] += 1
         if d['sheet'] > len(all_warehouses_buttons) // 9:
             text += '\nЭто последняя страница'
-            d['sheet'] = len(all_warehouses_buttons)
+            d['sheet'] = len(all_warehouses_buttons) // 9
     kb_warehouses = fill_kb_all_warehouses(d['sheet'])
     await state.set_data(d)
     return await callback.message.answer(
