@@ -1,4 +1,5 @@
 import asyncio
+import datetime
 import os
 from aiogram import Bot, Dispatcher, types, F
 from aiogram.enums import ParseMode
@@ -211,6 +212,8 @@ async def fill_start_and_finish_date_and_save(message: types.Message, state: FSM
 async def save_warehouse(callback: types.CallbackQuery, state: FSMContext):
     data = await state.get_data()
     await state.clear()
+    data['start_date'] = datetime.datetime.strptime(data['start_date'], "%d.%m.%Y").strftime("%Y-%m-%d")
+    data['finish_date'] = datetime.datetime.strptime(data['finish_date'], "%d.%m.%Y").strftime("%Y-%m-%d")
     answer = await make_request(
         url='/supplies/warehouses',
         params={'chat_id': callback.message.chat.id},
