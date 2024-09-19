@@ -52,14 +52,12 @@ kb_warehouse_setting_menu.row(
 
 all_warehouses = get(os.environ.get('API_URL') + '/supplies/warehouses', params={'chat_id': os.environ.get('ADMIN_CHAT')}).json()
 
-kb_all_warehouses = InlineKeyboardBuilder()
+all_warehouses_buttons = []
 for warehouse in all_warehouses['data']:
-    kb_all_warehouses.row(
-        InlineKeyboardButton(
-            text=f"{warehouse['warehouse_name']}",
-            callback_data=f"{warehouse['warehouse_id']}__{warehouse['warehouse_name']}"
-        )
-    )
+    all_warehouses_buttons.append(InlineKeyboardButton(
+        text=f"{warehouse['warehouse_name']}",
+        callback_data=f"{warehouse['warehouse_id']}__{warehouse['warehouse_name']}"
+    ))
 
 kb_confirm_adding_warehouse = InlineKeyboardBuilder()
 kb_confirm_adding_warehouse.row(
@@ -159,3 +157,11 @@ def create_update_keyboard(warehouse_id, warehouse_info) -> InlineKeyboardBuilde
         )
     )
     return kb_to_update
+
+
+def fill_kb_all_warehouses(sheet: int) -> InlineKeyboardBuilder:
+    kb_all_warehouses = InlineKeyboardBuilder([all_warehouses_buttons[sheet * 9:sheet * 9 + 8]])
+    kb_all_warehouses.button(text='< сюда', callback_data='warehouse_list__previous')
+    kb_all_warehouses.button(text='> туда', callback_data='warehouse_list__next')
+    kb_all_warehouses.adjust(3, 2)
+    return kb_all_warehouses

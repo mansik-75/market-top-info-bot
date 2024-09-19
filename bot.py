@@ -12,8 +12,9 @@ from redis import Redis
 
 import subscribe_payment
 import support
-from helper import kb_markup_subscribe, make_request, keyboard_work, kb_menu, kb_wrong_token, kb_all_warehouses, \
-    kb_confirm_adding_warehouse, kb_warehouse_setting_menu, create_update_keyboard
+from helper import kb_markup_subscribe, make_request, keyboard_work, kb_menu, kb_wrong_token, \
+    kb_confirm_adding_warehouse, kb_warehouse_setting_menu, create_update_keyboard, all_warehouses_buttons, \
+    fill_kb_all_warehouses
 from states import AddToken, AddWarehouse, ChangeWarehouse
 
 # redis_connection = Redis(host=os.environ.get('REDIS_URL'), port=6379, db=0, password=os.environ.get('REDIS_PASSWORD'))
@@ -117,13 +118,11 @@ async def setup_warehouses(callback: types.CallbackQuery, state: FSMContext):
         )
         kb_warehouses = InlineKeyboardBuilder()
         for warehouse in warehouses['data']:
-            kb_warehouses.row(
-                InlineKeyboardButton(
-                    text=f"{warehouse['warehouse_name']} "
-                         f"коэффициент: {warehouse['coefficient']} "
-                         f"с {warehouse['start_date']} до {warehouse['finish_date']}",
-                    callback_data=f"warehouse_update__{warehouse['id']}"
-                )
+            kb_warehouses.button(
+                text=f"{warehouse['warehouse_name']} "
+                     f"коэффициент: {warehouse['coefficient']} "
+                     f"с {warehouse['start_date']} до {warehouse['finish_date']}",
+                callback_data=f"warehouse_update__{warehouse['id']}"
             )
         return await callback.message.answer(
             'Итак, выбери какой склад желаешь изменить',
@@ -131,7 +130,33 @@ async def setup_warehouses(callback: types.CallbackQuery, state: FSMContext):
         )
     elif callback.data == 'warehouse_add':
         await state.set_state(AddWarehouse.name)
+        d = {'sheet': 0}
+        await state.set_data(d)
+        kb_all_warehouses = fill_kb_all_warehouses(d['sheet'])
         return await callback.message.answer('Выберите из списка склад', reply_markup=kb_all_warehouses.as_markup())
+
+
+@dp.callback_query(F.data.split('__')[0] == 'warehouse_list')
+@keyboard_work
+async def all_warehouses_manager(callback: types.CallbackQuery, state: FSMContext):
+    d = await state.get_data()
+    text = 'Выберите из списка склад'
+    if callback.data == 'warehouse_list_prev':
+        d['sheet'] -= 1
+        if d['sheet'] < 0:
+            text += '\nЭто первая страница'
+            d['sheet'] = 0
+    elif callback.data == 'warehouse_list_next':
+        d['sheet'] += 1
+        if d['sheet'] > len(all_warehouses_buttons) // 9:
+            text += '\nЭто последняя страница'
+            d['sheet'] = len(all_warehouses_buttons)
+    kb_warehouses = fill_kb_all_warehouses(d['sheet'])
+    await state.set_data(d)
+    return await callback.message.answer(
+        text,
+        reply_markup=kb_warehouses.as_markup()
+    )
 
 
 @dp.callback_query(AddWarehouse.name)

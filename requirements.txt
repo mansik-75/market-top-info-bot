@@ -4,3 +4,4 @@ openpyxl~=3.0.10
 XlsxWriter~=3.0.3
 aiohttp~=3.10.3
 redis~=5.0.8
+requests~=2.31.0
