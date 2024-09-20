@@ -28,6 +28,7 @@ kb_markup_support.button(
 kb_markup_support.button(
     text='Главное меню', callback_data='main_menu'
 )
+kb_markup_support.adjust(1)
 
 """Создаем клавиатуру для главного меню"""
 kb_menu = InlineKeyboardBuilder()
@@ -41,7 +42,7 @@ kb_menu.button(
     text='Проверить подписку', callback_data='subscribe_status'
 )
 kb_menu.button(
-    text='У меня проблемы', callback_data='support_manager'
+    text='У меня проблемы', callback_data='support'
 )
 kb_menu.adjust(1)
 
