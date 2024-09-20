@@ -173,3 +173,10 @@ def fill_kb_all_warehouses(sheet: int) -> InlineKeyboardBuilder:
         InlineKeyboardButton(text='> туда', callback_data='warehouse_list__next')
     )
     return kb_all_warehouses
+
+
+def validate(date_string, date_format):
+    try:
+        _ = datetime.strptime(date_string, date_format)
+    except ValueError:
+        raise TypeError('Неверный формат даты')

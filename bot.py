@@ -15,7 +15,7 @@ import subscribe_payment
 import support
 from helper import kb_markup_subscribe, make_request, keyboard_work, kb_menu, kb_wrong_token, \
     kb_confirm_adding_warehouse, kb_warehouse_setting_menu, create_update_keyboard, all_warehouses_buttons, \
-    fill_kb_all_warehouses, all_warehouses_names
+    fill_kb_all_warehouses, all_warehouses_names, validate
 from states import AddToken, AddWarehouse, ChangeWarehouse
 
 # redis_connection = Redis(host=os.environ.get('REDIS_URL'), port=6379, db=0, password=os.environ.get('REDIS_PASSWORD'))
@@ -173,7 +173,10 @@ async def fill_warehouse_name(callback: types.CallbackQuery, state: FSMContext):
 @dp.message(AddWarehouse.coefficient)
 async def fill_coefficient(message: types.Message, state: FSMContext):
     data = await state.get_data()
-    coefficient = message.text
+    try:
+        coefficient = int(message.text)
+    except ValueError:
+        return await message.answer('Необходимо ввести коэффициент в виде числа, например, 5')
     data['coefficient'] = coefficient
     await state.set_data(data)
     if 'start_date' in data:
@@ -194,7 +197,14 @@ async def fill_coefficient(message: types.Message, state: FSMContext):
 @dp.message(AddWarehouse.interval)
 async def fill_start_and_finish_date_and_save(message: types.Message, state: FSMContext):
     data = await state.get_data()
-    start_date, finish_date = message.text.split(' - ')
+    try:
+        start_date, finish_date = message.text.split(' - ')
+        validate(start_date, "%d.%m.%Y")
+        validate(finish_date, "%d.%m.%Y")
+    except ValueError:
+        return await message.answer('Необходимо следовать примеру при добавлении даты. Пример: 01.01.2024 - 15.01.2024')
+    except TypeError:
+        return message.answer('Необходимо ввести дату в формате ДД.ММ.ГГГГ. Пример: 01.01.2024 - 15.01.2024')
     data.update(start_date=start_date, finish_date=finish_date)
     await state.set_data(data)
     await state.set_state(AddWarehouse.confirm)
@@ -296,7 +306,10 @@ async def update_coefficient_set_state(callback: types.CallbackQuery, state: FSM
 async def update_coefficient(message: types.Message, state: FSMContext):
     warehouse_info = await state.get_data()
     await state.clear()
-    new_value = message.text
+    try:
+        new_value = int(message.text)
+    except ValueError:
+        return await message.answer('Необходимо ввести коэффициент в виде числа')
     warehouse_info['coefficient'] = new_value
     await state.set_data(warehouse_info)
     return await message.answer(
@@ -323,7 +336,14 @@ async def update_interval_set_state(callback: types.CallbackQuery, state: FSMCon
 @dp.message(ChangeWarehouse.interval)
 async def update_intervals(message: types.Message, state: FSMContext):
     warehouse_info = await state.get_data()
-    new_start_date, new_finish_date = message.text.split('-')
+    try:
+        new_start_date, new_finish_date = message.text.split(' - ')
+        validate(new_start_date, "%d.%m.%Y")
+        validate(new_finish_date, "%d.%m.%Y")
+    except ValueError:
+        return await message.answer('Необходимо следовать примеру при добавлении даты. Пример: 01.01.2024 - 15.01.2024')
+    except TypeError:
+        return message.answer('Необходимо ввести дату в формате ДД.ММ.ГГГГ. Пример: 01.01.2024 - 15.01.2024')
     warehouse_info['start_date'] = new_start_date,
     warehouse_info['finish_date'] = new_finish_date
     await state.clear()
