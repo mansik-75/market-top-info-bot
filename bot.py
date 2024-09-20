@@ -9,7 +9,7 @@ from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.fsm.storage.redis import RedisStorage
 from aiogram.types import InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
-from redis import Redis
+from redis.asyncio import Redis
 
 import subscribe_payment
 import support
@@ -18,9 +18,9 @@ from helper import kb_markup_subscribe, make_request, keyboard_work, kb_menu, kb
     fill_kb_all_warehouses, all_warehouses_names, validate, fill_kb_update_warehouses
 from states import AddToken, AddWarehouse, ChangeWarehouse
 
-# redis_connection = Redis(host=os.environ.get('REDIS_URL'), port=6379, db=0, password=os.environ.get('REDIS_PASSWORD'))
-# state_storage = RedisStorage(redis_connection)
-state_storage = MemoryStorage()
+redis_connection = Redis(host=os.environ.get('REDIS_URL'), port=6379, db=0, password=os.environ.get('REDIS_PASSWORD'))
+state_storage = RedisStorage(redis_connection)
+# state_storage = MemoryStorage()
 update_ids = set()
 
 
