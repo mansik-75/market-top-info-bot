@@ -15,7 +15,7 @@ import subscribe_payment
 import support
 from helper import kb_markup_subscribe, make_request, keyboard_work, kb_menu, kb_wrong_token, \
     kb_confirm_adding_warehouse, kb_warehouse_setting_menu, create_update_keyboard, all_warehouses_buttons, \
-    fill_kb_all_warehouses, all_warehouses_names, validate
+    fill_kb_all_warehouses, all_warehouses_names, validate, fill_kb_update_warehouses
 from states import AddToken, AddWarehouse, ChangeWarehouse
 
 # redis_connection = Redis(host=os.environ.get('REDIS_URL'), port=6379, db=0, password=os.environ.get('REDIS_PASSWORD'))
@@ -123,7 +123,7 @@ async def setup_warehouses(callback: types.CallbackQuery, state: FSMContext):
         for warehouse in warehouses['data'][d['sheet'] * 10:(d['sheet'] + 1) * 10]:
             kb_warehouses.button(
                 text=f"{warehouse['warehouse_name']} "
-                     f"коэффициент: {warehouse['coefficient']} "
+                     f"коэфф: {warehouse['coefficient']} "
                      f"с {warehouse['start_date']} до {warehouse['finish_date']}",
                 callback_data=f"warehouse_update__{warehouse['id']}"
             )
@@ -159,19 +159,7 @@ async def update_warehouse_manager(callback: types.CallbackQuery, state: FSMCont
         if d['sheet'] > len(all_warehouses_buttons) // 10:
             text += '\nЭто последняя страница'
             d['sheet'] = len(all_warehouses_buttons) // 10
-    kb_warehouses = InlineKeyboardBuilder()
-    for warehouse in d['data']:
-        kb_warehouses.button(
-            text=f"{warehouse['warehouse_name']} "
-                 f"коэфф: {warehouse['coefficient']} "
-                 f"с {warehouse['start_date']} до {warehouse['finish_date']}",
-            callback_data=f"warehouse_update__{warehouse['id']}"
-        )
-    kb_warehouses.adjust(1)
-    kb_warehouses.row(
-        InlineKeyboardButton(text='< сюда', callback_data='update_warehouse_list__previous'),
-        InlineKeyboardButton(text='> туда', callback_data='update_warehouse_list__next')
-    )
+    kb_warehouses = fill_kb_update_warehouses(d['sheet'], d['data'])
     await state.set_data(d)
     return await callback.message.answer(
         text,

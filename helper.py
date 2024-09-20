@@ -45,13 +45,16 @@ kb_wrong_token.adjust(1)
 
 """Создаем клавиатуру для настройки складов"""
 kb_warehouse_setting_menu = InlineKeyboardBuilder()
-kb_warehouse_setting_menu.row(
-    InlineKeyboardButton(text='Изменить параметры складов', callback_data='warehouse_change'),
-    InlineKeyboardButton(text='Добавить новый склад', callback_data='warehouse_add')
+kb_warehouse_setting_menu.button(
+    text='Изменить параметры складов', callback_data='warehouse_change'
 )
-kb_warehouse_setting_menu.row(
-    InlineKeyboardButton(text='В главное меню', callback_data='main_menu')
+kb_warehouse_setting_menu.button(
+    text='Добавить новый склад', callback_data='warehouse_add'
 )
+kb_warehouse_setting_menu.button(
+    text='В главное меню', callback_data='main_menu'
+)
+kb_warehouse_setting_menu.adjust(1)
 
 all_warehouses = get(os.environ.get('API_URL') + '/supplies/warehouses', params={'chat_id': os.environ.get('ADMIN_CHAT')}).json()
 all_warehouses_buttons = []
@@ -176,6 +179,23 @@ def fill_kb_all_warehouses(sheet: int) -> InlineKeyboardBuilder:
         InlineKeyboardButton(text='> туда', callback_data='warehouse_list__next')
     )
     return kb_all_warehouses
+
+
+def fill_kb_update_warehouses(sheet: int, data) -> InlineKeyboardBuilder:
+    kb_warehouses = InlineKeyboardBuilder()
+    for warehouse in data[sheet * 10:(sheet + 1) * 10]:
+        kb_warehouses.button(
+            text=f"{warehouse['warehouse_name']} "
+                 f"коэфф: {warehouse['coefficient']} "
+                 f"с {warehouse['start_date']} до {warehouse['finish_date']}",
+            callback_data=f"warehouse_update__{warehouse['id']}"
+        )
+    kb_warehouses.adjust(1)
+    kb_warehouses.row(
+        InlineKeyboardButton(text='< сюда', callback_data='update_warehouse_list__previous'),
+        InlineKeyboardButton(text='> туда', callback_data='update_warehouse_list__next')
+    )
+    return kb_warehouses
 
 
 def validate(date_string, date_format):
