@@ -305,11 +305,11 @@ async def update_coefficient_set_state(callback: types.CallbackQuery, state: FSM
 @dp.message(ChangeWarehouse.coefficient)
 async def update_coefficient(message: types.Message, state: FSMContext):
     warehouse_info = await state.get_data()
-    await state.clear()
     try:
         new_value = int(message.text)
     except ValueError:
         return await message.answer('Необходимо ввести коэффициент в виде числа')
+    await state.clear()
     warehouse_info['coefficient'] = new_value
     await state.set_data(warehouse_info)
     return await message.answer(
