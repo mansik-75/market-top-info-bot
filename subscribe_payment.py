@@ -2,7 +2,7 @@ import datetime
 import json
 import os
 
-from aiogram import Router, types, F
+from aiogram import Router, types, F, Bot
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.methods import SendInvoice, SendMessage
@@ -57,7 +57,8 @@ async def subscribe_status(message: types.Message, state: FSMContext):
 
 
 @router.callback_query(F.data == 'subscribe_pay')
-async def send_keyboard_with_tariffs(callback: types.CallbackQuery):
+@keyboard_work
+async def send_keyboard_with_tariffs(callback: types.CallbackQuery, _: FSMContext):
     return await callback.message.answer(
         'Выберите тариф, который хотите оплатить',
         reply_markup=kb_markup_subscribe_tariff.as_markup()
@@ -66,14 +67,14 @@ async def send_keyboard_with_tariffs(callback: types.CallbackQuery):
 
 @router.callback_query(F.data.in_(PRICE_IDS))
 @keyboard_work
-async def subscribe_payment(callback: types.CallbackQuery):
+async def subscribe_payment(callback: types.CallbackQuery, _: FSMContext, bot: Bot):
     """Метод, который отправляет счет пользователю"""
     if os.environ.get('PAYMENT_TOKEN').split(':')[1] == 'TEST':
         await callback.message.answer(
             'Это тестовый вариант оплаты, так что нужно использовать тестовую карту с реквизитами 1111 1111 1111 1026'
         )
     price = int(PRICES[callback.data].amount)
-    return await SendInvoice(
+    return await bot.send_invoice(
         chat_id=callback.message.chat.id,
         title='Подписка на бота',
         description='Вы оплачиваете подписку на месяц на пользование ботом для составления отчетов по продажам WB',

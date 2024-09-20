@@ -1,7 +1,6 @@
-from aiogram import Router, types, F
+from aiogram import Router, types, F, Bot
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
-from aiogram.methods import SendMessage
 
 from helper import kb_markup_support, keyboard_work, ADMINS_ID
 
@@ -30,13 +29,13 @@ async def send_support(message: types.Message, state: FSMContext):
 
 @router.callback_query(F.data.in_(['support_manager', 'subscribe_issues']))
 @keyboard_work
-async def send_message_to_admin(call: types.CallbackQuery, state: FSMContext):
+async def send_message_to_admin(call: types.CallbackQuery, _: FSMContext, bot: Bot):
     text = f'От клиента @{call.message.chat.username}:\n\nПроблемы '
     if call.data == 'support_manager':
         text += 'требующие консультации с менеджером\n'
     elif call.data == 'subscribe_issues':
         text += 'с оплатой, необходимо срочно написать'
-    await SendMessage(chat_id=ADMINS_ID[0], text=text)
+    await bot.send_message(chat_id=ADMINS_ID[0], text=text)
     return await call.message.answer(
         'Спасибо за помощь!\n\nЯ уже сообщил менеджеру, он свяжется с тобой в ближайшее время.'
     )
