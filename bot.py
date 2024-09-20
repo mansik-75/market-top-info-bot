@@ -59,7 +59,7 @@ async def send_welcome(message: types.Message, state):
 
 @dp.callback_query(F.data == 'token_yes')
 @keyboard_work
-async def add_token_handler(callback: types.CallbackQuery, state: FSMContext):
+async def add_token_handler(callback: types.CallbackQuery, state: FSMContext, *args, **kwargs):
     await state.clear()
     await callback.message.answer(
         'Отправь мне свой токен из личного кабинета WB для поставок с флагом только на чтение',
@@ -74,7 +74,7 @@ async def add_token_handler(callback: types.CallbackQuery, state: FSMContext):
 @dp.callback_query(F.data == 'cancel_agree')
 @dp.callback_query(F.data == 'warehouse_settings')
 @keyboard_work
-async def finish_token_adding(callback: types.CallbackQuery, state: FSMContext):
+async def finish_token_adding(callback: types.CallbackQuery, state: FSMContext, *args, **kwargs):
     await state.clear()
     if callback.data == 'token_no' or callback.data == 'warehouse_settings':
         return await callback.message.answer(
@@ -110,7 +110,7 @@ async def add_token(message: types.Message, state: FSMContext):
 @dp.callback_query(F.data == 'warehouse_change')
 @dp.callback_query(F.data == 'warehouse_add')
 @keyboard_work
-async def setup_warehouses(callback: types.CallbackQuery, state: FSMContext):
+async def setup_warehouses(callback: types.CallbackQuery, state: FSMContext, *args, **kwargs):
     if callback.data == 'warehouse_change':
         warehouses = await make_request(
             url='/supplies/warehouses',
@@ -134,7 +134,7 @@ async def setup_warehouses(callback: types.CallbackQuery, state: FSMContext):
 
 @dp.callback_query(F.data.split('__')[0] == 'update_warehouse_list')
 @keyboard_work
-async def update_warehouse_manager(callback: types.CallbackQuery, state: FSMContext):
+async def update_warehouse_manager(callback: types.CallbackQuery, state: FSMContext, *args, **kwargs):
     d = await state.get_data()
     text = 'Итак, выбери какой склад желаешь изменить'
     if callback.data == 'update_warehouse_list__previous':
@@ -157,7 +157,7 @@ async def update_warehouse_manager(callback: types.CallbackQuery, state: FSMCont
 
 @dp.callback_query(F.data.split('__')[0] == 'warehouse_list')
 @keyboard_work
-async def all_warehouses_manager(callback: types.CallbackQuery, state: FSMContext):
+async def all_warehouses_manager(callback: types.CallbackQuery, state: FSMContext, *args, **kwargs):
     d = await state.get_data()
     text = 'Выберите из списка склад'
     if callback.data == 'warehouse_list__previous':
@@ -180,7 +180,7 @@ async def all_warehouses_manager(callback: types.CallbackQuery, state: FSMContex
 
 @dp.callback_query(AddWarehouse.name)
 @keyboard_work
-async def fill_warehouse_name(callback: types.CallbackQuery, state: FSMContext):
+async def fill_warehouse_name(callback: types.CallbackQuery, state: FSMContext, *args, **kwargs):
     warehouse_id = callback.data
     warehouse_name = all_warehouses_names[warehouse_id]
     await state.set_data({'warehouse_name': warehouse_name, 'warehouse_id': warehouse_id})
@@ -237,7 +237,7 @@ async def fill_start_and_finish_date_and_save(message: types.Message, state: FSM
 
 @dp.callback_query(F.data == 'save')
 @keyboard_work
-async def save_warehouse(callback: types.CallbackQuery, state: FSMContext):
+async def save_warehouse(callback: types.CallbackQuery, state: FSMContext, *args, **kwargs):
     data = await state.get_data()
     await state.clear()
     data['start_date'] = datetime.datetime.strptime(data['start_date'], "%d.%m.%Y").strftime("%Y-%m-%d")
@@ -253,14 +253,14 @@ async def save_warehouse(callback: types.CallbackQuery, state: FSMContext):
 
 @dp.callback_query(F.data == 'change_coefficient_adding')
 @keyboard_work
-async def change_coefficient_adding(callback: types.CallbackQuery, state: FSMContext):
+async def change_coefficient_adding(callback: types.CallbackQuery, state: FSMContext, *args, **kwargs):
     await state.set_state(AddWarehouse.coefficient)
     return await callback.message.answer('Отправь коэффициент, ниже которого тебя необходимо уведомлять, например 5')
 
 
 @dp.callback_query(F.data == 'change_dates_adding')
 @keyboard_work
-async def change_interval_adding(callback: types.CallbackQuery, state: FSMContext):
+async def change_interval_adding(callback: types.CallbackQuery, state: FSMContext, *args, **kwargs):
     await state.set_state(AddWarehouse.interval)
     return await callback.message.answer(
         'Осталось совсем чуть-чуть, отправь интервал дат, в которые ты хочешь, чтобы я следил за поставками.\n\n '
@@ -270,7 +270,7 @@ async def change_interval_adding(callback: types.CallbackQuery, state: FSMContex
 
 @dp.callback_query(F.data.split("__")[0] == "warehouse_update")
 @keyboard_work
-async def select_update_fields(callback: types.CallbackQuery, state: FSMContext):
+async def select_update_fields(callback: types.CallbackQuery, state: FSMContext, *args, **kwargs):
     await state.clear()
     warehouse_id = callback.data.split('__')[1]
     warehouse_information = await make_request(
@@ -293,7 +293,7 @@ async def select_update_fields(callback: types.CallbackQuery, state: FSMContext)
 
 @dp.callback_query(F.data.split('__')[0] == 'change_is_active')
 @keyboard_work
-async def update_activity(callback: types.CallbackQuery, state: FSMContext):
+async def update_activity(callback: types.CallbackQuery, state: FSMContext, *args, **kwargs):
     warehouse_info = await state.get_data()
     warehouse_info['is_active'] = not warehouse_info['is_active']
     text = "Хорошо, не буду отслеживать этот склад" if not warehouse_info['is_active'] \
@@ -312,7 +312,7 @@ async def update_activity(callback: types.CallbackQuery, state: FSMContext):
 
 @dp.callback_query(F.data.split('__')[0] == 'change_coefficient')
 @keyboard_work
-async def update_coefficient_set_state(callback: types.CallbackQuery, state: FSMContext):
+async def update_coefficient_set_state(callback: types.CallbackQuery, state: FSMContext, *args, **kwargs):
     await state.set_state(ChangeWarehouse.coefficient)
     return await callback.message.answer(
         'Введи коэффициент, ниже которого хочешь получать уведомления об открытой приемке\n'
@@ -321,7 +321,7 @@ async def update_coefficient_set_state(callback: types.CallbackQuery, state: FSM
 
 
 @dp.message(ChangeWarehouse.coefficient)
-async def update_coefficient(message: types.Message, state: FSMContext):
+async def update_coefficient(message: types.Message, state: FSMContext, *args, **kwargs):
     warehouse_info = await state.get_data()
     try:
         new_value = int(message.text)
@@ -343,7 +343,7 @@ async def update_coefficient(message: types.Message, state: FSMContext):
 
 @dp.callback_query(F.data.split('__')[0] == 'change_interval')
 @keyboard_work
-async def update_interval_set_state(callback: types.CallbackQuery, state: FSMContext):
+async def update_interval_set_state(callback: types.CallbackQuery, state: FSMContext, *args, **kwargs):
     await state.set_state(ChangeWarehouse.interval)
     return await callback.message.answer(
         "Введи новый интервал, внутри которого я буду уведомлять тебя об открытых складах на поставку\n"
@@ -380,7 +380,7 @@ async def update_intervals(message: types.Message, state: FSMContext):
 
 @dp.callback_query(F.data == 'change_save')
 @keyboard_work
-async def save_change_answer(callback: types.CallbackQuery, state: FSMContext):
+async def save_change_answer(callback: types.CallbackQuery, state: FSMContext, *args, **kwargs):
     warehouse_info = await state.get_data()
     kb_answer_save = InlineKeyboardBuilder()
     kb_answer_save.row(
@@ -407,7 +407,7 @@ async def save_change_answer(callback: types.CallbackQuery, state: FSMContext):
 @dp.callback_query(F.data == 'save_agree')
 @dp.callback_query(F.data == 'save_disagree')
 @keyboard_work
-async def save_change_process(callback: types.CallbackQuery, state: FSMContext):
+async def save_change_process(callback: types.CallbackQuery, state: FSMContext, *args, **kwargs):
     warehouse_info = await state.get_data()
     if callback.data == 'save_disagree':
         return await callback.message.answer(
@@ -439,7 +439,7 @@ async def save_change_process(callback: types.CallbackQuery, state: FSMContext):
 
 @dp.callback_query(F.data == 'change_cancel')
 @keyboard_work
-async def cancel_change_answer(callback: types.CallbackQuery, state: FSMContext):
+async def cancel_change_answer(callback: types.CallbackQuery, state: FSMContext, *args, **kwargs):
     warehouse_info = await state.get_data()
     warehouse_info_old = await make_request(
         url=f"/supplies/warehouses/{warehouse_info['id']}",
@@ -472,7 +472,7 @@ async def cancel_change_answer(callback: types.CallbackQuery, state: FSMContext)
 
 @dp.callback_query(F.data == 'cancel_disagree')
 @keyboard_work
-async def cancel_change_process(callback: types.CallbackQuery, state: FSMContext):
+async def cancel_change_process(callback: types.CallbackQuery, state: FSMContext, *args, **kwargs):
     warehouse_info = await state.get_data()
     return await callback.message.answer(
         f"Выбери, что желаешь изменить"

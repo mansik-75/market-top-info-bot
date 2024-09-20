@@ -19,7 +19,7 @@ async def subscribe_status_command(message: types.Message, state: FSMContext):
 
 @router.callback_query(F.data == 'subscribe_status')
 @keyboard_work
-async def subscribe_status_callback(callback: types.CallbackQuery, state: FSMContext):
+async def subscribe_status_callback(callback: types.CallbackQuery, state: FSMContext, *args, **kwargs):
     return await subscribe_status(callback.message, state)
 
 
@@ -57,7 +57,7 @@ async def subscribe_status(message: types.Message, state: FSMContext):
 
 @router.callback_query(F.data == 'subscribe_pay')
 @keyboard_work
-async def send_keyboard_with_tariffs(callback: types.CallbackQuery):
+async def send_keyboard_with_tariffs(callback: types.CallbackQuery, *args, **kwargs):
     return await callback.message.answer(
         'Выберите тариф, который хотите оплатить',
         reply_markup=kb_markup_subscribe_tariff.as_markup()
@@ -66,7 +66,7 @@ async def send_keyboard_with_tariffs(callback: types.CallbackQuery):
 
 @router.callback_query(F.data.in_(PRICE_IDS))
 @keyboard_work
-async def subscribe_payment(callback: types.CallbackQuery, bot: Bot):
+async def subscribe_payment(callback: types.CallbackQuery, bot: Bot, *args, **kwargs):
     """Метод, который отправляет счет пользователю"""
     if os.environ.get('PAYMENT_TOKEN').split(':')[1] == 'TEST':
         await callback.message.answer(
