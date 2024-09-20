@@ -82,7 +82,7 @@ async def subscribe_payment(callback: types.CallbackQuery, bot: Bot, *args, **kw
         is_flexible=False,
         prices=[PRICES[callback.data]],
         start_parameter='service-subscription',
-        payload=f'subscription-for-user_{callback.message.chat.id}',
+        payload=f'subscription-for-user_{callback.message.chat.id}_{callback.data}',
         need_email=True,
         need_phone_number=True,
         send_email_to_provider=True,
@@ -123,19 +123,20 @@ async def process_successful_payment(message: types.Message, bot: Bot):
     print(payload)
     answer = await make_request(
         url='/users',
-        params={'chat_id': ADMINS_ID[0]},
+        params={'chat_id': os.environ.get('ADMIN_CHAT')},
         json_data={
             'chat_id': chat_id,
             'username': username,
             'phone_number': order_info.phone_number,
             'email': order_info.email,
             'total_amount': message.successful_payment.total_amount,
+            'tariff_id': payload.split('_')[2],
         },
     )
     print(answer)
     if not (answer and answer['success']):
         text = (f'Произошла ошибка у пользователя @{message.chat.username}, '
-                f'необходимо срочно разобраться и отправить ответ как можно скорее!!!'
+                f'необходимо срочно разобраться и отправить ответ как можно скорее!!!\n\n'
                 f'chat_id: <code>{chat_id}</code>\n'
                 f'номер чека: <code>{message.successful_payment.provider_payment_charge_id}</code>')
         await bot.send_message(chat_id=ADMINS_ID[0], text=text, parse_mode='HTML')
