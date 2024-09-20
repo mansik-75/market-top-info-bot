@@ -344,7 +344,7 @@ async def update_intervals(message: types.Message, state: FSMContext):
         return await message.answer('Необходимо следовать примеру при добавлении даты. Пример: 01.01.2024 - 15.01.2024')
     except TypeError:
         return message.answer('Необходимо ввести дату в формате ДД.ММ.ГГГГ. Пример: 01.01.2024 - 15.01.2024')
-    warehouse_info['start_date'] = new_start_date,
+    warehouse_info['start_date'] = new_start_date
     warehouse_info['finish_date'] = new_finish_date
     await state.clear()
     await state.set_data(warehouse_info)
