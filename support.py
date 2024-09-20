@@ -29,7 +29,7 @@ async def send_support(message: types.Message, state: FSMContext):
 
 @router.callback_query(F.data.in_(['support_manager', 'subscribe_issues']))
 @keyboard_work
-async def send_message_to_admin(call: types.CallbackQuery, _: FSMContext, bot: Bot):
+async def send_message_to_admin(call: types.CallbackQuery, bot: Bot):
     text = f'От клиента @{call.message.chat.username}:\n\nПроблемы '
     if call.data == 'support_manager':
         text += 'требующие консультации с менеджером\n'

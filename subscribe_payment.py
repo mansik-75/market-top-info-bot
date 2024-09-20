@@ -5,7 +5,6 @@ import os
 from aiogram import Router, types, F, Bot
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
-from aiogram.methods import SendInvoice, SendMessage
 
 from helper import kb_markup_subscribe, kb_markup_subscribe_tariff, PRICE_IDS, PRICES, ADMINS_ID, make_request, \
     keyboard_work, kb_markup_support, kb_menu
@@ -58,7 +57,7 @@ async def subscribe_status(message: types.Message, state: FSMContext):
 
 @router.callback_query(F.data == 'subscribe_pay')
 @keyboard_work
-async def send_keyboard_with_tariffs(callback: types.CallbackQuery, _: FSMContext):
+async def send_keyboard_with_tariffs(callback: types.CallbackQuery):
     return await callback.message.answer(
         'Выберите тариф, который хотите оплатить',
         reply_markup=kb_markup_subscribe_tariff.as_markup()
@@ -67,7 +66,7 @@ async def send_keyboard_with_tariffs(callback: types.CallbackQuery, _: FSMContex
 
 @router.callback_query(F.data.in_(PRICE_IDS))
 @keyboard_work
-async def subscribe_payment(callback: types.CallbackQuery, _: FSMContext, bot: Bot):
+async def subscribe_payment(callback: types.CallbackQuery, bot: Bot):
     """Метод, который отправляет счет пользователю"""
     if os.environ.get('PAYMENT_TOKEN').split(':')[1] == 'TEST':
         await callback.message.answer(
@@ -115,7 +114,7 @@ async def process_pre_checkout_query(pre_checkout_query: types.PreCheckoutQuery)
 
 
 @router.message(F.successful_payment)
-async def process_successful_payment(message: types.Message):
+async def process_successful_payment(message: types.Message, bot: Bot):
     """Метод, который вызывается после успешной оплаты и регистрирует пользователя на сервере"""
     payload = message.successful_payment.invoice_payload
     chat_id = message.chat.id
@@ -139,7 +138,7 @@ async def process_successful_payment(message: types.Message):
                 f'необходимо срочно разобраться и отправить ответ как можно скорее!!!'
                 f'chat_id: <code>{chat_id}</code>\n'
                 f'номер чека: <code>{message.successful_payment.provider_payment_charge_id}</code>')
-        await SendMessage(chat_id=ADMINS_ID[0], text=text, parse_mode='HTML')
+        await bot.send_message(chat_id=ADMINS_ID[0], text=text, parse_mode='HTML')
         return await message.answer(
             'Произошла ошибка, но мы о ней уже знаем и сообщили о ней менеджеру',
             reply_markup=kb_menu.as_markup(),

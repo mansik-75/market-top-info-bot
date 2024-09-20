@@ -121,9 +121,9 @@ for price in prices['tariffs']:
 
 
 def keyboard_work(function):
-    async def decorator(call: types.CallbackQuery, state):
+    async def decorator(call: types.CallbackQuery, *args, **kwargs):
         await call.answer()
-        answer = await function(call, state)
+        answer = await function(call, *args, **kwargs)
         await call.message.edit_reply_markup()
         return answer
     return decorator
