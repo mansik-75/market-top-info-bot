@@ -2,7 +2,7 @@ from aiogram import Router, types, F, Bot
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 
-from helper import kb_markup_support, keyboard_work, ADMINS_ID
+from helper import kb_markup_support, keyboard_work, ADMINS_ID, kb_menu
 
 router = Router()
 
@@ -37,5 +37,6 @@ async def send_message_to_admin(call: types.CallbackQuery, bot: Bot, *args, **kw
         text += 'с оплатой, необходимо срочно написать'
     await bot.send_message(chat_id=ADMINS_ID[0], text=text)
     return await call.message.answer(
-        'Спасибо за помощь!\n\nЯ уже сообщил менеджеру, он свяжется с тобой в ближайшее время.'
+        'Спасибо за помощь!\n\nЯ уже сообщил менеджеру, он свяжется с тобой в ближайшее время.',
+        reply_markup=kb_menu.as_markup()
     )
