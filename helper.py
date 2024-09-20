@@ -25,22 +25,25 @@ kb_markup_support.add(
 
 """Создаем клавиатуру для главного меню"""
 kb_menu = InlineKeyboardBuilder()
-kb_menu.row(
-    InlineKeyboardButton(text='Настроить склады', callback_data='warehouse_settings')
+kb_menu.button(
+    text='Настроить склады', callback_data='warehouse_settings'
 )
-kb_menu.row(
-    InlineKeyboardButton(text='Добавить токен', callback_data='token_yes')
+kb_menu.button(
+    text='Добавить токен', callback_data='token_yes'
 )
+kb_menu.adjust(1)
 
 """Создаем клавиатуру для токена"""
 kb_wrong_token = InlineKeyboardBuilder()
-kb_wrong_token.row(
-    InlineKeyboardButton(text='Инструкция по созданию токена', url='https://www.youtube.com/watch?v=dQw4w9WgXcQ')
+kb_wrong_token.button(
+    text='Инструкция по созданию токена', url='https://www.youtube.com/watch?v=dQw4w9WgXcQ'
 )
-kb_wrong_token.row(
-    InlineKeyboardButton(text='Продолжить без токена', callback_data='token_no')
+kb_wrong_token.button(
+    text='Продолжить без токена', callback_data='token_no'
 )
+kb_wrong_token.adjust(1)
 
+"""Создаем клавиатуру для настройки складов"""
 kb_warehouse_setting_menu = InlineKeyboardBuilder()
 kb_warehouse_setting_menu.row(
     InlineKeyboardButton(text='Изменить параметры складов', callback_data='warehouse_change'),
@@ -51,7 +54,6 @@ kb_warehouse_setting_menu.row(
 )
 
 all_warehouses = get(os.environ.get('API_URL') + '/supplies/warehouses', params={'chat_id': os.environ.get('ADMIN_CHAT')}).json()
-
 all_warehouses_buttons = []
 all_warehouses_names = {}
 for warehouse in all_warehouses['data']:
@@ -61,19 +63,21 @@ for warehouse in all_warehouses['data']:
         callback_data=str(warehouse['warehouse_id'])
     ))
 
+"""Создаем клавиатуру для сохранения нового склада"""
 kb_confirm_adding_warehouse = InlineKeyboardBuilder()
-kb_confirm_adding_warehouse.row(
-    InlineKeyboardButton(text='Да, все верно', callback_data='save')
+kb_confirm_adding_warehouse.button(
+    text='Да, все верно', callback_data='save'
 )
-kb_confirm_adding_warehouse.row(
-    InlineKeyboardButton(text='Коэффициент неверный', callback_data='change_coefficient_adding')
+kb_confirm_adding_warehouse.button(
+    text='Коэффициент неверный', callback_data='change_coefficient_adding'
 )
-kb_confirm_adding_warehouse.row(
-    InlineKeyboardButton(text='Интервал дат неверный', callback_data='change_dates_adding')
+kb_confirm_adding_warehouse.button(
+    text='Интервал дат неверный', callback_data='change_dates_adding'
 )
-kb_confirm_adding_warehouse.row(
-    InlineKeyboardButton(text='Отменить добавление склада', callback_data='cancel_adding')
+kb_confirm_adding_warehouse.button(
+    text='Отменить добавление склада', callback_data='cancel_adding'
 )
+kb_confirm_adding_warehouse.adjust(1)
 
 # prices = get(os.environ.get('API_URL') + '/admin/tariffs', params={'chat_id': '526206350'}).json()
 prices = {
@@ -133,21 +137,20 @@ async def make_request(url, params: dict, json_data=None, files=None, method='po
 
 def create_update_keyboard(warehouse_id, warehouse_info) -> InlineKeyboardBuilder:
     kb_to_update = InlineKeyboardBuilder()
-    kb_to_update.row(
-        InlineKeyboardButton(
-            text="Выключить отслеживание"
-            if warehouse_info['is_active'] else "Включить отслеживание",
-            callback_data=f'change_is_active__{warehouse_id}'
-        ),
-        InlineKeyboardButton(
-            text='Изменить коэффициент',
-            callback_data=f'change_coefficient__{warehouse_id}'
-        ),
-        InlineKeyboardButton(
-            text='Изменить интервал',
-            callback_data=f'change_interval__{warehouse_id}'
-        )
+    kb_to_update.button(
+        text="Выключить отслеживание"
+        if warehouse_info['is_active'] else "Включить отслеживание",
+        callback_data=f'change_is_active__{warehouse_id}'
     )
+    kb_to_update.button(
+        text='Изменить коэффициент',
+        callback_data=f'change_coefficient__{warehouse_id}'
+    )
+    kb_to_update.button(
+        text='Изменить интервал',
+        callback_data=f'change_interval__{warehouse_id}'
+    )
+    kb_to_update.adjust(1)
     kb_to_update.row(
         InlineKeyboardButton(
             text='Сохранить и выйти',

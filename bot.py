@@ -118,13 +118,20 @@ async def setup_warehouses(callback: types.CallbackQuery, state: FSMContext):
             method='get'
         )
         kb_warehouses = InlineKeyboardBuilder()
-        for warehouse in warehouses['data']:
+        d = {'sheet': 0, 'data': warehouses['data']}
+        await state.set_data(d)
+        for warehouse in warehouses['data'][d['sheet'] * 10:(d['sheet'] + 1) * 10]:
             kb_warehouses.button(
                 text=f"{warehouse['warehouse_name']} "
                      f"коэффициент: {warehouse['coefficient']} "
                      f"с {warehouse['start_date']} до {warehouse['finish_date']}",
                 callback_data=f"warehouse_update__{warehouse['id']}"
             )
+        kb_warehouses.adjust(1)
+        kb_warehouses.row(
+            InlineKeyboardButton(text='< сюда', callback_data='update_warehouse_list__previous'),
+            InlineKeyboardButton(text='> туда', callback_data='update_warehouse_list__next')
+        )
         return await callback.message.answer(
             'Итак, выбери какой склад желаешь изменить',
             reply_markup=kb_warehouses.as_markup()
@@ -135,6 +142,41 @@ async def setup_warehouses(callback: types.CallbackQuery, state: FSMContext):
         await state.set_data(d)
         kb_all_warehouses = fill_kb_all_warehouses(d['sheet'])
         return await callback.message.answer('Выберите из списка склад', reply_markup=kb_all_warehouses.as_markup())
+
+
+@dp.callback_query(F.data.split('__')[0] == 'update_warehouse_list')
+@keyboard_work
+async def update_warehouse_manager(callback: types.CallbackQuery, state: FSMContext):
+    d = await state.get_data()
+    text = 'Итак, выбери какой склад желаешь изменить'
+    if callback.data == 'update_warehouse_list__previous':
+        d['sheet'] -= 1
+        if d['sheet'] < 0:
+            text += '\nЭто первая страница'
+            d['sheet'] = 0
+    elif callback.data == 'update_warehouse_list__next':
+        d['sheet'] += 1
+        if d['sheet'] > len(all_warehouses_buttons) // 10:
+            text += '\nЭто последняя страница'
+            d['sheet'] = len(all_warehouses_buttons) // 10
+    kb_warehouses = InlineKeyboardBuilder()
+    for warehouse in d['data']:
+        kb_warehouses.button(
+            text=f"{warehouse['warehouse_name']} "
+                 f"коэфф: {warehouse['coefficient']} "
+                 f"с {warehouse['start_date']} до {warehouse['finish_date']}",
+            callback_data=f"warehouse_update__{warehouse['id']}"
+        )
+    kb_warehouses.adjust(1)
+    kb_warehouses.row(
+        InlineKeyboardButton(text='< сюда', callback_data='update_warehouse_list__previous'),
+        InlineKeyboardButton(text='> туда', callback_data='update_warehouse_list__next')
+    )
+    await state.set_data(d)
+    return await callback.message.answer(
+        text,
+        reply_markup=kb_warehouses.as_markup()
+    )
 
 
 @dp.callback_query(F.data.split('__')[0] == 'warehouse_list')
@@ -181,8 +223,8 @@ async def fill_coefficient(message: types.Message, state: FSMContext):
     await state.set_data(data)
     if 'start_date' in data:
         return await message.answer(
-            f"Ты хочешь добавить склад {data['warehouse_name']}\n "
-            f"с коэффициентом {data['coefficient']}\n "
+            f"Ты хочешь добавить склад {data['warehouse_name']}\n"
+            f"с коэффициентом {data['coefficient']}\n"
             f"на даты с {data['start_date']}\n"
             f" по {data['finish_date']}?",
             reply_markup=kb_confirm_adding_warehouse.as_markup()
@@ -209,8 +251,8 @@ async def fill_start_and_finish_date_and_save(message: types.Message, state: FSM
     await state.set_data(data)
     await state.set_state(AddWarehouse.confirm)
     return await message.answer(
-        f"Ты хочешь добавить склад {data['warehouse_name']}\n "
-        f"с коэффициентом {data['coefficient']}\n "
+        f"Ты хочешь добавить склад {data['warehouse_name']}\n"
+        f"с коэффициентом {data['coefficient']}\n"
         f"на даты с {data['start_date']}\n"
         f" по {data['finish_date']}?",
         reply_markup=kb_confirm_adding_warehouse.as_markup()
@@ -266,7 +308,7 @@ async def select_update_fields(callback: types.CallbackQuery, state: FSMContext)
         f"Выбери, что желаешь изменить.\n"
         f"Сейчас у тебя: \n"
         f"Склад: {warehouse_information['warehouse']['warehouse_name']}\n"
-        f" коэффициент: {warehouse_information['warehouse']['coefficient']}\n "
+        f" коэффициент: {warehouse_information['warehouse']['coefficient']}\n"
         f"с {warehouse_information['warehouse']['start_date']}\n"
         f" до {warehouse_information['warehouse']['finish_date']}",
         reply_markup=kb_to_update.as_markup()
@@ -285,7 +327,7 @@ async def update_activity(callback: types.CallbackQuery, state: FSMContext):
         f"{text}\n\n"
         f"Сейчас у тебя:\n"
         f"Склад: {warehouse_info['warehouse_name']}\n"
-        f" коэффициент: {warehouse_info['coefficient']}\n "
+        f" коэффициент: {warehouse_info['coefficient']}\n"
         f"с {warehouse_info['start_date']}\n"
         f" до {warehouse_info['finish_date']}",
         reply_markup=create_update_keyboard(warehouse_info['id'], warehouse_info).as_markup()
@@ -353,7 +395,7 @@ async def update_intervals(message: types.Message, state: FSMContext):
         f"с {new_start_date} по {new_finish_date}\n\n"
         f"Сейчас у тебя:\n"
         f"Склад: {warehouse_info['warehouse_name']}\n"
-        f" коэффициент: {warehouse_info['coefficient']}\n "
+        f" коэффициент: {warehouse_info['coefficient']}\n"
         f"с {warehouse_info['start_date']}\n"
         f" до {warehouse_info['finish_date']}",
         reply_markup=create_update_keyboard(warehouse_info['id'], warehouse_info).as_markup()
@@ -396,7 +438,7 @@ async def save_change_process(callback: types.CallbackQuery, state: FSMContext):
             f"Выбери, что желаешь изменить"
             f"Сейчас у тебя:\n"
             f"Склад: {warehouse_info['warehouse_name']}\n"
-            f" коэффициент: {warehouse_info['coefficient']}\n "
+            f" коэффициент: {warehouse_info['coefficient']}\n"
             f"с {warehouse_info['start_date']}\n"
             f" до {warehouse_info['finish_date']}",
             reply_markup=create_update_keyboard(warehouse_info['id'], warehouse_info).as_markup()
@@ -443,9 +485,9 @@ async def cancel_change_answer(callback: types.CallbackQuery, state: FSMContext)
     return await callback.message.answer(
         "Действительно желаешь отменить изменения, все изменения не сохранятся\n"
         f"Сейчас у тебя:\n"
-        f"Склад: {warehouse_info['warehouse_name']}\n "
-        f"коэффициент: {warehouse_info['coefficient']} <s>({old_info['coefficient']})</s>\n "
-        f"с {warehouse_info['start_date']} <s>({old_info['start_date']})</s>\n "
+        f"Склад: {warehouse_info['warehouse_name']}\n"
+        f"коэффициент: {warehouse_info['coefficient']} <s>({old_info['coefficient']})</s>\n"
+        f"с {warehouse_info['start_date']} <s>({old_info['start_date']})</s>\n"
         f"до {warehouse_info['finish_date']} <s>({old_info['finish_date']})</s>",
         reply_markup=kb_answer_cancel.as_markup(),
         parse_mode='HTML'
@@ -460,7 +502,7 @@ async def cancel_change_process(callback: types.CallbackQuery, state: FSMContext
         f"Выбери, что желаешь изменить"
         f"Сейчас у тебя:\n"
         f"Склад: {warehouse_info['warehouse_name']}\n"
-        f" коэффициент: {warehouse_info['coefficient']}\n "
+        f" коэффициент: {warehouse_info['coefficient']}\n"
         f"с {warehouse_info['start_date']}\n"
         f" до {warehouse_info['finish_date']}",
         reply_markup=create_update_keyboard(warehouse_info['id'], warehouse_info).as_markup()
