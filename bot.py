@@ -382,6 +382,9 @@ async def save_change_process(callback: types.CallbackQuery, state: FSMContext):
             reply_markup=create_update_keyboard(warehouse_info['id'], warehouse_info).as_markup()
         )
 
+    warehouse_info['start_date'] = datetime.datetime.strptime(warehouse_info['start_date'], "%d.%m.%Y").strftime("%Y-%m-%d")
+    warehouse_info['finish_date'] = datetime.datetime.strptime(warehouse_info['finish_date'], "%d.%m.%Y").strftime("%Y-%m-%d")
+
     response = await make_request(
         url="/supplies/warehouses/update",
         params={'chat_id': callback.message.chat.id},
