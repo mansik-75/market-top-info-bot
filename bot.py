@@ -47,13 +47,18 @@ async def send_welcome(message: types.Message, state):
             method='get'
         )
         if not answer['success']:
-            await message.answer('Ваша подписка просрочена, оплатите', reply_markup=kb_markup_subscribe)
-            return
+            return await message.answer('Твоя подписка просрочена, оплати', reply_markup=kb_markup_subscribe)
+        return await message.answer(
+            'Я могу уведомлять тебя о наличии бесплатной приемки товара на WB.'
+            'Если хочешь точно отслеживать коэффициенты, отправь мне WB API токен для поставок',
+            parse_mode=ParseMode.MARKDOWN,
+            reply_markup=kb_menu.as_markup()
+        )
+    
     return await message.answer(
-        'Я могу уведомлять тебя о наличии бесплатной приемки товара на WB.'
-        'Если хочешь точно отслеживать коэффициенты, отправь мне WB API токен для поставок',
-        parse_mode=ParseMode.MARKDOWN,
-        reply_markup=kb_menu.as_markup()
+        'Добро пожаловать. Я могу уведомлять тебя о наличии бесплатной приемки товара на WB.'
+        'Для дальнейшей работы тебе необходимо оплатить подписку',
+        reply_markup=kb_markup_subscribe.as_markup()
     )
 
 
