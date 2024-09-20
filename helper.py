@@ -16,11 +16,17 @@ kb_markup_subscribe.row(
 kb_markup_subscribe.row(
     InlineKeyboardButton(text='Проблемы с платежём', callback_data='subscribe_issues')
 )
+kb_markup_subscribe.row(
+    InlineKeyboardButton(text='Главное меню', callback_data='main_menu')
+)
 
 """Создаем клавиатуру для обратной связи пользователя"""
 kb_markup_support = InlineKeyboardBuilder()
-kb_markup_support.add(
-    InlineKeyboardButton(text='Консультация менеджера', callback_data='support_manager')
+kb_markup_support.button(
+    text='Консультация менеджера', callback_data='support_manager'
+)
+kb_markup_support.button(
+    text='Главное меню', callback_data='main_menu'
 )
 
 """Создаем клавиатуру для главного меню"""
@@ -32,7 +38,10 @@ kb_menu.button(
     text='Добавить токен', callback_data='token_yes'
 )
 kb_menu.button(
-    text='Подписка', callback_data='subscribe_status'
+    text='Проверить подписку', callback_data='subscribe_status'
+)
+kb_menu.button(
+    text='У меня проблемы', callback_data='support_manager'
 )
 kb_menu.adjust(1)
 
@@ -99,7 +108,7 @@ prices = {
 
 PRICES = {}
 PRICE_IDS = tuple(str(price['id']) for price in prices['tariffs'])
-ADMINS_ID = [526206350, 53060580]
+ADMINS_ID = [526206350]
 
 kb_markup_subscribe_tariff = InlineKeyboardBuilder()
 

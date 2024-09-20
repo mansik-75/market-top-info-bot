@@ -5,10 +5,10 @@ import os
 from aiogram import Router, types, F
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
-from aiogram.methods import SendInvoice
+from aiogram.methods import SendInvoice, SendMessage
 
 from helper import kb_markup_subscribe, kb_markup_subscribe_tariff, PRICE_IDS, PRICES, ADMINS_ID, make_request, \
-    keyboard_work
+    keyboard_work, kb_markup_support, kb_menu
 
 router = Router()
 
@@ -32,22 +32,25 @@ async def subscribe_status(message: types.Message, state: FSMContext):
         method='get'
     )
     if not answer:
-        await message.answer('Произошла ошибка, пожалуйста, свяжитесь с поддержкой')
-        return
+        return await message.answer(
+            'Произошла ошибка, пожалуйста, свяжитесь с поддержкой',
+            reply_markup=kb_markup_support.as_markup()
+        )
     if answer['success']:
         subscribe_exp_date = answer['subscribe_exp']
         if answer['active']:
-            await message.answer(
+            return await message.answer(
                 f"Подписка действительна до "
-                f"{datetime.datetime.strptime(subscribe_exp_date, '%Y-%m-%d').strftime('%d.%m.%Y')}"
+                f"{datetime.datetime.strptime(subscribe_exp_date, '%Y-%m-%d').strftime('%d.%m.%Y')}",
+                reply_markup=kb_markup_subscribe.as_markup()
             )
         else:
-            await message.answer(
+            return await message.answer(
                 'Сейчас у тебя нет действующих подписок, можешь купить',
                 reply_markup=kb_markup_subscribe.as_markup()
             )
     else:
-        await message.answer(
+        return await message.answer(
             'Сейчас у тебя нет действующих подписок, можешь купить',
             reply_markup=kb_markup_subscribe.as_markup()
         )
@@ -55,7 +58,7 @@ async def subscribe_status(message: types.Message, state: FSMContext):
 
 @router.callback_query(F.data == 'subscribe_pay')
 async def send_keyboard_with_tariffs(callback: types.CallbackQuery):
-    await callback.message.answer(
+    return await callback.message.answer(
         'Выберите тариф, который хотите оплатить',
         reply_markup=kb_markup_subscribe_tariff.as_markup()
     )
@@ -70,7 +73,7 @@ async def subscribe_payment(callback: types.CallbackQuery):
             'Это тестовый вариант оплаты, так что нужно использовать тестовую карту с реквизитами 1111 1111 1111 1026'
         )
     price = int(PRICES[callback.data].amount)
-    return SendInvoice(
+    return await SendInvoice(
         chat_id=callback.message.chat.id,
         title='Подписка на бота',
         description='Вы оплачиваете подписку на месяц на пользование ботом для составления отчетов по продажам WB',
@@ -107,7 +110,7 @@ async def subscribe_payment(callback: types.CallbackQuery):
 @router.pre_checkout_query()
 async def process_pre_checkout_query(pre_checkout_query: types.PreCheckoutQuery):
     """Метод, который занимается проверкой правильности заполнения счета пользователем"""
-    await pre_checkout_query.answer(ok=True)
+    return await pre_checkout_query.answer(ok=True)
 
 
 @router.message(F.successful_payment)
@@ -131,10 +134,16 @@ async def process_successful_payment(message: types.Message):
     )
     print(answer)
     if not (answer and answer['success']):
-        await message.answer(
-            f'Произошла ошибка, пожалуйста, свяжитесь с поддержкой, указав следующие данные: '
-            f'{chat_id} и {message.successful_payment.provider_payment_charge_id}'
+        text = (f'Произошла ошибка у пользователя @{message.chat.username}, '
+                f'необходимо срочно разобраться и отправить ответ как можно скорее!!!'
+                f'chat_id: <code>{chat_id}</code>\n'
+                f'номер чека: <code>{message.successful_payment.provider_payment_charge_id}</code>')
+        await SendMessage(chat_id=ADMINS_ID[0], text=text, parse_mode='HTML')
+        return await message.answer(
+            'Произошла ошибка, но мы о ней уже знаем и сообщили о ней менеджеру',
+            reply_markup=kb_menu.as_markup(),
         )
-        return
-    text = f'Поздравляю с оформлением тарифа!'
-    return await message.answer(text)
+    return await message.answer(
+        'Поздравляю с оформлением тарифа!',
+        reply_markup=kb_menu.as_markup(),
+    )
