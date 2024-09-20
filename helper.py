@@ -31,6 +31,9 @@ kb_menu.button(
 kb_menu.button(
     text='Добавить токен', callback_data='token_yes'
 )
+kb_menu.button(
+    text='Подписка', callback_data='subscribe_status'
+)
 kb_menu.adjust(1)
 
 """Создаем клавиатуру для токена"""
@@ -178,6 +181,9 @@ def fill_kb_all_warehouses(sheet: int) -> InlineKeyboardBuilder:
         InlineKeyboardButton(text='< сюда', callback_data='warehouse_list__previous'),
         InlineKeyboardButton(text='> туда', callback_data='warehouse_list__next')
     )
+    kb_all_warehouses.row(
+        InlineKeyboardButton(text='В главное меню', callback_data='main_menu')
+    )
     return kb_all_warehouses
 
 
@@ -194,6 +200,9 @@ def fill_kb_update_warehouses(sheet: int, data) -> InlineKeyboardBuilder:
     kb_warehouses.row(
         InlineKeyboardButton(text='< сюда', callback_data='update_warehouse_list__previous'),
         InlineKeyboardButton(text='> туда', callback_data='update_warehouse_list__next')
+    )
+    kb_warehouses.row(
+        InlineKeyboardButton(text='В главное меню', callback_data='main_menu')
     )
     return kb_warehouses
 

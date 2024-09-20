@@ -1,8 +1,10 @@
+import datetime
 import json
 import os
 
 from aiogram import Router, types, F
 from aiogram.filters import Command
+from aiogram.fsm.context import FSMContext
 from aiogram.methods import SendInvoice
 
 from helper import kb_markup_subscribe, kb_markup_subscribe_tariff, PRICE_IDS, PRICES, ADMINS_ID, make_request, \
@@ -12,7 +14,18 @@ router = Router()
 
 
 @router.message(Command('subscription'))
-async def subscribe_status(message: types.Message):
+async def subscribe_status_command(message: types.Message, state: FSMContext):
+    return await subscribe_status(message, state)
+
+
+@router.callback_query(F.data == 'subscribe_status')
+@keyboard_work
+async def subscribe_status_callback(callback: types.CallbackQuery, state: FSMContext):
+    return await subscribe_status(callback.message, state)
+
+
+async def subscribe_status(message: types.Message, state: FSMContext):
+    await state.clear()
     answer = await make_request(
         url='/users',
         params={'chat_id': message.chat.id},
@@ -24,7 +37,10 @@ async def subscribe_status(message: types.Message):
     if answer['success']:
         subscribe_exp_date = answer['subscribe_exp']
         if answer['active']:
-            await message.answer(f"Подписка действительна до {subscribe_exp_date}")
+            await message.answer(
+                f"Подписка действительна до "
+                f"{datetime.datetime.strptime(subscribe_exp_date, '%Y-%m-%d').strftime('%d.%m.%Y')}"
+            )
         else:
             await message.answer(
                 'Сейчас у тебя нет действующих подписок, можешь купить',

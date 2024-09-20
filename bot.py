@@ -117,21 +117,9 @@ async def setup_warehouses(callback: types.CallbackQuery, state: FSMContext):
             params={'chat_id': callback.message.chat.id},
             method='get'
         )
-        kb_warehouses = InlineKeyboardBuilder()
         d = {'sheet': 0, 'data': warehouses['data']}
         await state.set_data(d)
-        for warehouse in warehouses['data'][d['sheet'] * 10:(d['sheet'] + 1) * 10]:
-            kb_warehouses.button(
-                text=f"{warehouse['warehouse_name']} "
-                     f"коэфф: {warehouse['coefficient']} "
-                     f"с {warehouse['start_date']} до {warehouse['finish_date']}",
-                callback_data=f"warehouse_update__{warehouse['id']}"
-            )
-        kb_warehouses.adjust(1)
-        kb_warehouses.row(
-            InlineKeyboardButton(text='< сюда', callback_data='update_warehouse_list__previous'),
-            InlineKeyboardButton(text='> туда', callback_data='update_warehouse_list__next')
-        )
+        kb_warehouses = fill_kb_update_warehouses(d['sheet'], d['data'])
         return await callback.message.answer(
             'Итак, выбери какой склад желаешь изменить',
             reply_markup=kb_warehouses.as_markup()
