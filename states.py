@@ -1,17 +1,9 @@
-from aiogram.fsm.state import StatesGroup, State
+
+from aiogram.fsm.state import State, StatesGroup
 
 
-class AddToken(StatesGroup):
-    wait = State()
-
-
-class AddWarehouse(StatesGroup):
-    name = State()
-    coefficient = State()
-    interval = State()
-    confirm = State()
-
-
-class ChangeWarehouse(StatesGroup):
-    coefficient = State()
-    interval = State()
+class DownloadAPIKey(StatesGroup):
+    key = State()
+    key_type = State()
+    key_type_save = State()
+    email = State()
