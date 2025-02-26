@@ -33,7 +33,7 @@ def kb_token_type(marked={}) -> InlineKeyboardMarkup:
 def kb_save() ->InlineKeyboardMarkup:
     kb = InlineKeyboardBuilder()
     kb.row(
-        InlineKeyboardButton(text='Сохранить', callback_data='save')
+        InlineKeyboardButton(text='Сохранить', callback_data='save'),
         InlineKeyboardButton(text='Отменить', callback_data='cancel'),
         width=2,
     )
